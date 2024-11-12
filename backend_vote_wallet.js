@@ -11,9 +11,9 @@ app.use(express.json());
 const messageService = new SolapiMessageService('NCSFIHOTE2K7KZ2A', 'KGTACMVYA2SLMUALCBOTBEDU3CBTSVDQ');
 
 // Temporary in-memory store for wallets, votes, and verification codes (in production, use a proper database)
-const wallets = {};
-const votes = {};
-const verificationCodes = {};
+const wallets = {}; // { phoneNumber: wallet }
+const votes = {}; // { phoneNumber: candidate }
+const verificationCodes = {}; // { phoneNumber: code }
 
 // 후보자 이름 목록
 const candidates = {
@@ -31,6 +31,11 @@ app.post('/send-verification-code', async (req, res) => {
   const { phoneNumber } = req.body;
   if (!phoneNumber) {
     return res.status(400).send('전화번호가 필요합니다.');
+  }
+
+  // 이미 투표한 사용자는 인증번호 요청을 막기
+  if (votes[phoneNumber]) {
+    return res.status(403).send('이미 투표를 완료하셨습니다. 인증번호를 다시 받을 수 없습니다.');
   }
 
   // Generate a 6-digit verification code
@@ -64,6 +69,11 @@ app.post('/generate-wallet', async (req, res) => {
     return res.status(400).send('유효하지 않은 인증 코드입니다.');
   }
 
+  // 이미 지갑이 생성된 사용자는 다시 생성하지 않음
+  if (wallets[phoneNumber]) {
+    return res.status(400).send('이미 지갑이 생성되었습니다.');
+  }
+
   // Generate a new wallet
   const wallet = ethers.Wallet.createRandom();
   wallets[phoneNumber] = wallet;
@@ -81,7 +91,7 @@ app.post('/vote', (req, res) => {
   const wallet = wallets[phoneNumber];
 
   if (!wallet) {
-    return res.status(400).send('오류가 발생했습니다.');
+    return res.status(400).send('오류가 발생했습니다. 지갑이 생성되지 않았습니다.');
   }
 
   if (votes[phoneNumber]) {
