@@ -21,6 +21,7 @@ const candidates = {
   'Candidate 2': '정현빈',
   'Candidate 3': '김유민',
   'Candidate 4': '가면맨',
+  'Candidate 4': '김건모'
   'Candidate 5': '제훈파티시엘',
   'Candidate 6': '멀티과 손흥민 이강인',
   'Candidate 7': '흥사차력쇼',
